@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 @pytest.fixture(scope="session")
 def engine():
-    return create_engine(f"postgresql://{config['user']}:{config['password']}@localhost:5432/university")
+    return create_engine(f"postgresql://{config['user']}:{config['password']}@localhost:5432/test_database")
 
 
 @pytest.fixture(scope="session")
