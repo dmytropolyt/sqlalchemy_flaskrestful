@@ -1,10 +1,16 @@
 from flask import Flask
 from flask_restful import Resource, Api, fields, marshal_with, reqparse, abort
 from models import session, Student
+from flasgger import Swagger
 
 app = Flask(__name__)
 api = Api(app)
 
+app.config['SWAGGER'] = {
+    'title': 'University API',
+    'uiversion': 2
+}
+swagger = Swagger(app)
 
 resource_fields = {
     "id": fields.Integer,
@@ -23,7 +29,15 @@ put_parser.add_argument("last_name", type=str)
 
 
 class ToDoList(Resource):
+
     def get(self):
+        """
+        This returns an array of student model from database
+        ---
+        responses:
+          200:
+            description: An array of student model from database
+        """
         students = session.query(Student).all()
         todos = {}
         for student in students:
@@ -37,6 +51,25 @@ class StudentAPI(Resource):
 
     @marshal_with(resource_fields)
     def get(self, todo_id):
+        """
+        This returns a student row by id from student model in database
+        ---
+        parameters:
+          - in: path
+            name: todo_id
+            type: integer
+            required: true
+        responses:
+          200:
+            description: A single user item
+            schema:
+              id: User
+              properties:
+                todo_id:
+                  type: integer
+                  description: info about student
+                  default: Steven Wilson
+        """
         student = session.query(Student).get(todo_id)
         if not student:
             abort(404, message="Could not find student with that id")
@@ -45,6 +78,31 @@ class StudentAPI(Resource):
 
     @marshal_with(resource_fields)
     def post(self, todo_id):
+        """
+        Add a student to database
+        ---
+        parameters:
+          - in: body
+            name: student
+            description: student to create
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+          - in: path
+            name: todo_id
+            type: integer
+            required: true
+        responses:
+          201:
+            description: Student has been created
+        """
         args = post_parser.parse_args()
         task = session.query(Student).get(todo_id)
         if task:
@@ -59,6 +117,31 @@ class StudentAPI(Resource):
 
     @marshal_with(resource_fields)
     def put(self, todo_id):
+        """
+        Update a student from database
+        ---
+        parameters:
+          - in: body
+            name: student
+            description: student to create
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+          - in: path
+            name: todo_id
+            type: integer
+            required: true
+        responses:
+          201:
+            description: Student has been updated
+        """
         args = put_parser.parse_args()
         student = session.query(Student).get(todo_id)
         if not student:
@@ -69,9 +152,21 @@ class StudentAPI(Resource):
             student.last_name = args['last_name']
         session.commit()
 
-        return student
+        return student, 201
 
     def delete(self, todo_id):
+        """
+        Deletes a student from student model
+        ---
+        parameters:
+          - in: path
+            name: todo_id
+            type: string
+            required: true
+        responses:
+          204:
+            description: Student deleted
+        """
         session.query(Student).filter(Student.id == todo_id).delete()
         session.commit()
 
