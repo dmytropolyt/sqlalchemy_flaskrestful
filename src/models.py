@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, String, ForeignKey, Table
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm import sessionmaker
+from settings import database_url
 
 config = {'user': 'postgres',
           'password': '121212q',
@@ -9,9 +10,7 @@ config = {'user': 'postgres',
           'port': '5432',
           'db': 'university'}
 
-engine = create_engine(
-    f"postgresql://{config['user']}:{config['password']}@{config['host']}:{config['port']}/{config['db']}"
-)
+engine = create_engine(database_url)
 Base = declarative_base()
 
 association = Table(

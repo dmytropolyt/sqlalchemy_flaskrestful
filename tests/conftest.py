@@ -1,11 +1,12 @@
 import pytest
-from src.models import config, Base
+from src.models import Base
+from src.settings import test_database_url
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 @pytest.fixture(scope="session")
 def engine():
-    return create_engine(f"postgresql://{config['user']}:{config['password']}@localhost:5432/test_database")
+    return create_engine(test_database_url)
 
 
 @pytest.fixture(scope="session")

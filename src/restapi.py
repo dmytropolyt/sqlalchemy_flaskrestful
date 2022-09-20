@@ -27,7 +27,7 @@ put_parser = reqparse.RequestParser()
 put_parser.add_argument("first_name", type=str)
 put_parser.add_argument("last_name", type=str)
 
-
+@api.resource('/students')
 class ToDoList(Resource):
 
     def get(self):
@@ -39,24 +39,21 @@ class ToDoList(Resource):
             description: An array of student model from database
         """
         students = session.query(Student).all()
-        todos = {}
-        for student in students:
-            todos[student.id] = {
-                "group_id": student.group_id, "first_name": student.first_name, "last_name": student.last_name
-            }
+        todos = [[student.id, student.group_id, student.first_name, student.last_name] for student in students]
 
         return todos
 
+@api.resource('/students/<int:student_id>')
 class StudentAPI(Resource):
 
     @marshal_with(resource_fields)
-    def get(self, todo_id):
+    def get(self, student_id):
         """
         This returns a student row by id from student model in database
         ---
         parameters:
           - in: path
-            name: todo_id
+            name: student_id
             type: integer
             required: true
         responses:
@@ -65,19 +62,19 @@ class StudentAPI(Resource):
             schema:
               id: User
               properties:
-                todo_id:
+                student_id:
                   type: integer
                   description: info about student
                   default: Steven Wilson
         """
-        student = session.query(Student).get(todo_id)
+        student = session.query(Student).get(student_id)
         if not student:
             abort(404, message="Could not find student with that id")
 
         return student
 
     @marshal_with(resource_fields)
-    def post(self, todo_id):
+    def post(self):
         """
         Add a student to database
         ---
@@ -88,54 +85,48 @@ class StudentAPI(Resource):
             schema:
               type: object
               required:
-                - firstName
-                - lastName
+                - first_name
+                - last_name
               properties:
-                firstName:
+                first_name:
                   type: string
-                lastName:
+                last_name:
                   type: string
-          - in: path
-            name: todo_id
-            type: integer
-            required: true
         responses:
           201:
             description: Student has been created
         """
         args = post_parser.parse_args()
-        task = session.query(Student).get(todo_id)
-        if task:
-            abort(409, message="Student id already taken")
 
-        todo = Student(id=todo_id, **args)
+        todo = Student(**args)
         session.add(todo)
         session.commit()
-        student = session.query(Student).get(todo_id)
-
+        student = session.query(Student).filter(
+            Student.first_name == args['first_name'], Student.last_name == args['last_name']
+        ).first()
         return student, 201
 
     @marshal_with(resource_fields)
-    def put(self, todo_id):
+    def put(self, student_id):
         """
         Update a student from database
         ---
         parameters:
           - in: body
             name: student
-            description: student to create
+            description: data to update
             schema:
               type: object
               required:
-                - firstName
-                - lastName
+                - first_name
+                - last_name
               properties:
-                firstName:
+                first_name:
                   type: string
-                lastName:
+                last_name:
                   type: string
           - in: path
-            name: todo_id
+            name: student_id
             type: integer
             required: true
         responses:
@@ -143,7 +134,7 @@ class StudentAPI(Resource):
             description: Student has been updated
         """
         args = put_parser.parse_args()
-        student = session.query(Student).get(todo_id)
+        student = session.query(Student).filter_by(id=student_id).first()
         if not student:
             abort(404, message='Student do not exist, cannot update')
         if args['first_name']:
@@ -151,31 +142,27 @@ class StudentAPI(Resource):
         if args['last_name']:
             student.last_name = args['last_name']
         session.commit()
-
+        student = session.query(Student).get(student_id)
         return student, 201
 
-    def delete(self, todo_id):
+    def delete(self, student_id):
         """
         Deletes a student from student model
         ---
         parameters:
           - in: path
-            name: todo_id
+            name: student_id
             type: string
             required: true
         responses:
           204:
             description: Student deleted
         """
-        session.query(Student).filter(Student.id == todo_id).delete()
+        session.query(Student).filter(Student.id == student_id).delete()
         session.commit()
 
         return 'Student has been deleted', 204
 
 
-
-api.add_resource(StudentAPI, '/students/<int:todo_id>')
-api.add_resource(ToDoList, '/students')
-
-if __name__  == '__main__':
+if __name__ == '__main__':
     app.run(debug=True)

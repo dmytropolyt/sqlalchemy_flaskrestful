@@ -135,5 +135,6 @@ class Queries:
         self.session.commit()
         print(f'Student - {self.data_list[0]} removed from course - {self.data_list[1]}')
 
-
+a = session.query(Student).filter(Student.first_name == 'Mark', Student.last_name == 'Greer').one()
+print({'id': a.id})
 
