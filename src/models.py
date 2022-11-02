@@ -4,8 +4,8 @@ from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm import sessionmaker
 from settings import database_url
 
-config = {'user': 'postgres',
-          'password': '121212q',
+config = {'user': 'your_username',
+          'password': 'your_password',
           'host': '127.0.0.1',
           'port': '5432',
           'db': 'university'}
