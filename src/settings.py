@@ -1,5 +1,6 @@
-config = {'user': 'postgres',
-          'password': '121212q',
+#config for postgesql database
+config = {'user': 'your_username',
+          'password': 'your_password',
           'host': '127.0.0.1',
           'port': '5432',
           'db': 'university'}
